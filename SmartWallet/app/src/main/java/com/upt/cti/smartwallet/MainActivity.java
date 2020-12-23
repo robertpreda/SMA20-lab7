@@ -5,7 +5,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -17,6 +19,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.MissingResourceException;
 
 import model.MonthlyExpenses;
 
@@ -30,6 +36,11 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference databaseReference;
     private ValueEventListener databaseListener;
 
+    private final List<String> monthNames = new ArrayList<>();
+    private final List<MonthlyExpenses> monthlyExpenses = new ArrayList<>();
+
+    private ArrayAdapter<String> sAdapter;
+
     private String currentMonth;
 
     @Override
@@ -38,16 +49,24 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         eIncome = findViewById(R.id.eIncome);
-        eExpenses = findViewById(R.id.eExpenses);
+        eExpenses = findViewById(R.id.eExp);
         monthSpinner = findViewById(R.id.monthsSpinner);
+        monthSpinner.setPrompt("Select month: ");
+
+        sAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, monthNames);
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         databaseReference = database.getReference();
 
+        sAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        monthSpinner.setAdapter(sAdapter);
+
         databaseReference.child("calendar").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                
+                for(DataSnapshot ds: snapshot.getChildren()) {
+                    monthNames.add(ds.getKey());
+                }
             }
 
             @Override
@@ -68,15 +87,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
-            }
-
-            @Override
-            public void onDataChange(DataSnapshot snapshot){
-                for(DataSnapshot ds : snapshot.getChildren()) {
-                    String name = ds.getKey();
-
-
-                }
             }
         });
 
